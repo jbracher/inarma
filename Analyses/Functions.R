@@ -1,3 +1,7 @@
+# This file contains functions to reproduce the analyses from
+# J. Bracher (2019): An INARMA(1, 1) model with Poisson marginals.
+
+
 #######################################################
 # Functions for likelihood evaluation and fitting
 #######################################################
@@ -104,10 +108,11 @@ reparam_inarma_to_hidden_inar <- function(tau, phi, kappa){
 }
 
 # Evaluate likelihood of INARMA(1, 1) model
+#
 # Arguments:
 # vect: a vector containing the observed time series
 # tau, phi, kappa: parameters of INARMA(1, 1) model (compare manuscript)
-
+# log, return_fp: passed on to lik_hidden_inar (see there)
 llik_inarma <- function(vect, tau, phi, kappa, log = TRUE, return_fp = FALSE){
   # re-parametrize to hidden INAR(1)
   pars_hidden_inar <- reparam_inarma_to_hidden_inar(tau = tau, phi = phi, kappa = kappa)
@@ -116,7 +121,13 @@ llik_inarma <- function(vect, tau, phi, kappa, log = TRUE, return_fp = FALSE){
                   q = pars_hidden_inar$q, log = log, return_fp = return_fp)
 }
 
-# fit INARMA(1, 1) model
+# Fit INARMA(1, 1) model
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ...: additional arguments passed to optim
+# Return: a named list containing the parameter estimates, log-likelihood, model dimension
+# and object returned by the call to optim
 fit_inarma <- function(vect, ...){
   nllik <- function(pars){
     -llik_inarma(vect, tau = exp(pars["log_tau"]),
@@ -134,7 +145,13 @@ fit_inarma <- function(vect, ...){
   return(list(par = par, llik = llik, dim = 3, opt = opt))
 }
 
-# fit hidden INAR(1) model
+# Fit hidden INAR(1) model
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ...: additional arguments passed to optim
+# Return: a named list containing the parameter estimates, log-likelihood, model dimension
+# and object returned by the call to optim
 fit_hidden_inar <- function(vect, ...){
   # negative log-likelihood as function of parameter vector
   nllik <- function(pars){
@@ -150,10 +167,16 @@ fit_hidden_inar <- function(vect, ...){
            alpha = exp(opt$par["logit_alpha"])/(1 + exp(opt$par["logit_alpha"])),
            beta = exp(opt$par["logit_beta"])/(1 + exp(opt$par["logit_beta"])))
   names(par) <- c("nu", "alpha", "beta")
-  return(list(par = par, llik = llik, opt = opt))
+  return(list(par = par, llik = llik, dim = 3, opt = opt))
 }
 
-# fitting a simpler INAR(1):
+# Fit INAR(1) model:
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ...: additional arguments passed to optim
+# Return: a named list containing the parameter estimates, log-likelihood, model dimension
+# and object returned by the call to optim
 fit_inar <- function(vect, ...){
   # negative log-likelihood as function of parameter vector
   nllik <- function(pars){
@@ -171,8 +194,15 @@ fit_inar <- function(vect, ...){
   return(list(par = par, llik = llik, dim = 2, opt = opt))
 }
 
-# likelihood of an INARCH(1) model
-llik_inarch <- function(vect, nu, alpha, lambda1, return_fitted = FALSE){
+# Evaluate log-likelihood of an INARCH(1) model
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# nu, alpha, lambda1: parameters of the INARCH(1) model
+# return fitted: should fitted values be returned?
+# Return: log-likelihood, or (if return_fitted) a list containing the log-likelihood
+# and the fitted values
+llik_inarch <- function(vect, nu, alpha, lambda1, log = TRUE, return_fitted = FALSE){
   lgt <- length(vect)
   lambda <- numeric(lgt)
   lambda[1] <- lambda1
@@ -185,7 +215,13 @@ llik_inarch <- function(vect, nu, alpha, lambda1, return_fitted = FALSE){
   }
 }
 
-# fitting an INARCH(1) model
+# Fitting an INARCH(1) model
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ...: additional arguments passed to optim
+# Return: a named list containing the parameter estimates, log-likelihood, model dimension
+# and object returned by the call to optim
 fit_inarch <- function(vect, ...){
   # negative log-likelihood as function of parameter vector:
   nllik <- function(pars){
@@ -204,8 +240,15 @@ fit_inarch <- function(vect, ...){
   return(list(par = par, llik = llik, dim = 3, opt = opt))
 }
 
-# likelihood for an INGARCH(1, 1) model
-lik_ingarch <- function(vect, tau, phi, kappa, lambda1, return_fitted = FALSE){
+# Evaluate log-likelihood for an INGARCH(1, 1) model
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# tau, phi, kappa, lambda1: parameters of the INARCH(1) model
+# return fitted: should fitted values be returned?
+# Return: log-likelihood, or (if return_fitted) a list containing the log-likelihood
+# and the fitted values
+llik_ingarch <- function(vect, tau, phi, kappa, lambda1, log = TRUE, return_fitted = FALSE){
   lgt <- length(vect)
   # re-parameterize:
   nu <- phi*tau
@@ -224,11 +267,17 @@ lik_ingarch <- function(vect, tau, phi, kappa, lambda1, return_fitted = FALSE){
   }
 }
 
-# fitting an INGARCH(1, 1) model
+# Fitting an INGARCH(1, 1) model
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ...: additional arguments passed to optim
+# Return: a named list containing the parameter estimates, log-likelihood, model dimension
+# and object returned by the call to optim
 fit_ingarch <- function(vect, ...){
   # negative log-likelihood as function of parameter vector:
   nllik <- function(pars){
-    -lik_ingarch(vect, tau = exp(pars["log_tau"]),
+    -llik_ingarch(vect, tau = exp(pars["log_tau"]),
                  phi = exp(pars["logit_phi"])/(1 + exp(pars["logit_phi"])),
                  kappa = exp(pars["logit_kappa"])/(1 + exp(pars["logit_kappa"])),
                  lambda1 = exp(pars["log_lambda1"]))
@@ -248,7 +297,12 @@ fit_ingarch <- function(vect, ...){
 # Simulation functions
 #######################################################
 
-# fct to simulate from a hidden INAR(1):
+# Simulate from a hidden INAR(1) model
+#
+# Arguments:
+# nu, alpha, q: parameters of the hidden INAR(1)
+# lgt: the length of the simulated time series
+# Return: a named list with the simulated hidden and observed processes
 sim_hidden_inar <- function(nu, alpha, q, lgt = 10){
   X <- numeric(lgt)
   X[1] <- rpois(1, nu/(1 - alpha))
@@ -259,8 +313,13 @@ sim_hidden_inar <- function(nu, alpha, q, lgt = 10){
   return(list(X = X, Y = Y))
 }
 
-# simulation function for INARMA(1, 1):
-sim_inarma <- function(tau, phi, kappa, lgt = 100000){
+# Simulate from an INARMA(1, 1) model
+#
+# Arguments:
+# tau, phi, kappa: parameters of the INARMA(1, 1)
+# lgt: the length of the simulated time series
+# Return: a named list with the simulated processes X, S and I
+sim_inarma <- function(tau, phi, kappa, lgt = 10){
   lgt_total <- lgt + 15
   I <- rpois(lgt_total, tau)
   X <- rep(NA, lgt_total); X[1] <- 0
@@ -273,7 +332,12 @@ sim_inarma <- function(tau, phi, kappa, lgt = 100000){
   return(list(X = tail(X, lgt), S = tail(S, lgt), I = tail(I, lgt)))
 }
 
-# simulation function for INGARCH(1, 1)
+# Simulate from an INGARCH(1, 1) model
+#
+# Arguments:
+# tau, phi, kappa: parameters of the INGARCH(1, 1)
+# lgt: length of the simulated time series
+# Return: The simulated process
 sim_ingarch <- function(tau, phi, kappa, lgt){
   lgt_total <- lgt + 100
   X <- S <- numeric(lgt_total)
@@ -286,56 +350,29 @@ sim_ingarch <- function(tau, phi, kappa, lgt){
 
 
 #######################################################
-# Helper functions to for simulation studies
-#######################################################
-
-# wrapper to simulate many time series from an INARMA(1, 1) model
-# (in order to evaluate likelihood empirically):
-sim_many_inarma <- function(tau, phi, kappa, lgt, n_sim){
-  X_samples <- Y_samples <- matrix(ncol = lgt, nrow = n_sim)
-  for(i in 1:n_sim){
-    sim_temp <- sim_inarma(tau, phi, kappa, lgt)
-    X_samples[i, ] <- sim_temp$X
-  }
-  return(list(X = X_samples))
-}
-
-# wrapper to simulate many time series (in order to evaluate likelihood empirically):
-sim_many_hidden_inar <- function(nu, alpha, q, lgt, n_sim){
-  X_samples <- Y_samples <- matrix(ncol = lgt, nrow = n_sim)
-  for(i in 1:n_sim){
-    sim_temp <- sim_hidden_inar(nu, alpha, q, lgt)
-    X_samples[i, ] <- sim_temp$X
-    Y_samples[i, ] <- sim_temp$Y
-  }
-  return(list(X = X_samples, Y = Y_samples))
-}
-
-# evaluate empirical proportion of a given sequence (used in empirical likelihood
-# evaluation of short sequences):
-emp_prob <- function(Y_samples, vect){
-  mean(colSums(t(Y_samples) == vect) == ncol(Y_samples))
-}
-
-# get acf in convenient format:
-decomp_acf <- function(vect){
-  acf <- acf(vect)
-  return(c(gamma1 = acf$acf[2], decay = acf$acf[3]/acf$acf[2]))
-}
-
-
-#######################################################
 # Functions for one-step-ahead forecasts
 #######################################################
 
-# do one one-step-ahead-forecast from INAR(1) model
+# Get one one-step-ahead-forecast from an INAR(1) model with fixed parameters
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ind_forecast: for which time period shall a forecast be issued?
+# nu, alpha: parameters of the INAR(1)
+# Return: a vector of forecast probabilities (for 0, ..., round(1.5*max(vect))
 osa_inar0 <- function(vect, ind_forecast, nu, alpha){
   upper_limit <- max(qpois(0.999, nu/(1 - alpha)), round(1.5*max(vect)))
   transition_matrix <- get_transition_matrix(nu = nu, alpha, upper_limit = upper_limit)
   return(transition_matrix[vect[ind_forecast - 1] + 1, ])
 }
 
-# do one-step-ahead-forecast from hidden INAR(1) model
+# Get one one-step-ahead-forecast from a hidden INAR(1) model with fixed parameters
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ind_forecast: for which time period shall a forecast be issued?
+# nu, alpha, q: parameters of the hidden INAR(1)
+# Return: a vector of forecast probabilities (for 0, ..., round(1.5*max(vect))
 osa_hidden_inar0 <- function(vect, ind_forecast, nu, alpha, q){
 
   upper_limit <- max(qpois(0.999, nu/(1 - alpha)), round(1.5*max(vect)/q))
@@ -374,7 +411,13 @@ osa_hidden_inar0 <- function(vect, ind_forecast, nu, alpha, q){
   return(forecast_Y)
 }
 
-# wrapper around osa_inar0 to get forecasts for a range of weeks
+# Get one-step-ahead forecasts from INAR(1) model for a range of weeks
+# The model will be re-fit for each forecast.
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# from, to: begin and end of the period to forecast
+# Return: a matrix of forecast probabilities (for each week: 0, ..., round(1.5*max(vect))
 osa_inar <- function(vect, from, to){
   inds_to_forecast <- from:to
   pred_distr <- list()
@@ -394,7 +437,13 @@ osa_inar <- function(vect, from, to){
   return(list(logS = sum(logS_vector), logS_vector = logS_vector, pred_distr = pred_distr))
 }
 
-# do one one-step-ahead-forecast from INARMA(1, 1) model
+# Get one one-step-ahead-forecast from an INARMA(1, 1) model with fixed parameters
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# ind_forecast: for which time period shall a forecast be issued?
+# tau, phi, kappa: parameters of the hidden INAR(1)
+# Return: a vector of forecast probabilities (for 0, ..., round(1.5*max(vect))
 osa_inarma0 <- function(vect, ind_forecast, tau, phi, kappa){
   # re-parameterize
   par_hidden_inar <- reparam_inarma_to_hidden_inar(tau = tau, phi = phi, kappa = kappa)
@@ -403,7 +452,13 @@ osa_inarma0 <- function(vect, ind_forecast, tau, phi, kappa){
                    alpha = par_hidden_inar$alpha, q = par_hidden_inar$q)
 }
 
-# wrapper around osa_inarma0 to get forecasts for a range of weeks
+# Get one-step-ahead forecasts from INARMA(1, 1) model for a range of weeks
+# The model will be re-fit for each forecast.
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# from, to: begin and end of the period to forecast
+# Return: a matrix of forecast probabilities (for each week: 0, ..., round(1.5*max(vect))
 osa_inarma <- function(vect, from, to){
   inds_to_forecast <- from:to
   pred_distr <- list()
@@ -424,7 +479,13 @@ osa_inarma <- function(vect, from, to){
   return(list(logS = sum(logS_vector), logS_vector = logS_vector, pred_distr = pred_distr))
 }
 
-# one-step-ahead forecasts from INARCH(1)
+# Get one-step-ahead forecasts from INARCH(1) model for a range of weeks
+# The model will be re-fit for each forecast.
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# from, to: begin and end of the period to forecast
+# Return: a matrix of forecast probabilities (for each week: 0, ..., round(1.5*max(vect))
 osa_inarch <- function(vect, from, to){
   inds_to_forecast <- from:to
   logS_vector <- numeric(length(inds_to_forecast)); names(logS_vector) <- inds_to_forecast
@@ -445,7 +506,13 @@ osa_inarch <- function(vect, from, to){
   return(list(logS = sum(logS_vector), logS_vector = logS_vector))
 }
 
-# one-step-ahead forecasts from INGARCH(1, 1)
+# Get one-step-ahead forecasts from INGARCH(1, 1) model for a range of weeks
+# The model will be re-fit for each forecast.
+#
+# Arguments:
+# vect: a vector containing the observed time series
+# from, to: begin and end of the period to forecast
+# Return: a matrix of forecast probabilities (for each week: 0, ..., round(1.5*max(vect))
 osa_ingarch <- function(vect, from, to){
   inds_to_forecast <- from:to
   logS_vector <- numeric(length(inds_to_forecast)); names(logS_vector) <- inds_to_forecast
@@ -467,4 +534,41 @@ osa_ingarch <- function(vect, from, to){
     setTxtProgressBar(pb, i)
   }
   return(list(logS = sum(logS_vector), logS_vector = logS_vector))
+}
+
+#######################################################
+# Additional helper functions to for simulation studies
+#######################################################
+
+# wrapper to simulate many time series from an INARMA(1, 1) model:
+sim_many_inarma <- function(tau, phi, kappa, lgt, n_sim){
+  X_samples <- Y_samples <- matrix(ncol = lgt, nrow = n_sim)
+  for(i in 1:n_sim){
+    sim_temp <- sim_inarma(tau, phi, kappa, lgt)
+    X_samples[i, ] <- sim_temp$X
+  }
+  return(list(X = X_samples))
+}
+
+# wrapper to simulate many time series from a hidden INAR(1) model:
+sim_many_hidden_inar <- function(nu, alpha, q, lgt, n_sim){
+  X_samples <- Y_samples <- matrix(ncol = lgt, nrow = n_sim)
+  for(i in 1:n_sim){
+    sim_temp <- sim_hidden_inar(nu, alpha, q, lgt)
+    X_samples[i, ] <- sim_temp$X
+    Y_samples[i, ] <- sim_temp$Y
+  }
+  return(list(X = X_samples, Y = Y_samples))
+}
+
+# evaluate empirical proportion of a given sequence (used in empirical likelihood
+# evaluation of short sequences):
+emp_prob <- function(Y_samples, vect){
+  mean(colSums(t(Y_samples) == vect) == ncol(Y_samples))
+}
+
+# get acf in convenient format:
+decomp_acf <- function(vect){
+  acf <- acf(vect)
+  return(c(gamma1 = acf$acf[2], decay = acf$acf[3]/acf$acf[2]))
 }
