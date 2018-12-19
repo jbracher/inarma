@@ -1,7 +1,11 @@
+# This file contains code to reproduce the analyses from
+# J. Bracher (2019): An INARMA(1, 1) model with Poisson marginals.
+
 #######################################################
 # Real data study
 #######################################################
 
+# Get functions for likelihood evaluation, fitting etc.
 setwd("/home/johannes/Documents/underreporting/Theory_Equivalence/Proceedings_INARMA")
 source("Analyses/Functions.R")
 
