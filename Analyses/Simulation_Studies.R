@@ -101,7 +101,7 @@ lines(table(sim_ia3$X[inds_following_pattern])/length(inds_following_pattern))
 tau4 <- 5
 kappa4 <- 0.6
 phi4 <- 0.3
-xi4 <- 1 - phi4 + phi4*kappa4
+xi4 <- 1 - phi4*(1 - kappa4)
 
 # INGARCH:
 sim4 <- sim_ingarch(tau = tau4, phi = phi4, kappa = kappa4, lgt = 100000)
