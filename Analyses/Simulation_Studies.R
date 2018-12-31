@@ -33,11 +33,11 @@ tau <- 1
 phi <- 0.3
 kappa <- 0.2
 
-# vector for which to evaluate likelihood:
-vect <- c(1, 2, 2)
-
-# get many simulations (short chains, otherwise too much computation effort):
+# get many simulations (short chains of length 3, otherwise too much computation effort):
 sim_ia <- sim_many_inarma(tau, phi, kappa, lgt = 3, n_sim = 100000)
+
+# vector (of length 3) for which to evaluate likelihood:
+vect <- c(1, 2, 4)
 # evaluate likelihood empirically:
 emp_prob(sim_ia$X, vect)
 # evaluate analytically:
@@ -58,9 +58,7 @@ sim_ia2 <- sim_many_inarma(tau2, phi2, kappa2, lgt2, n_sim = 10)
 
 # fit the model to one of these series:
 fit_ia2 <- fit_inarma(sim_ia2$X[1, ])
-exp(fit_ia2$opt$par["log_tau"])
-exp(fit_ia2$opt$par["logit_phi"])/(1 + exp(fit_ia2$opt$par["logit_phi"]))
-exp(fit_ia2$opt$par["logit_kappa"])/(1 + exp(fit_ia2$opt$par["logit_kappa"]))
+fit_ia2$par
 # seems to work.
 
 
@@ -75,7 +73,7 @@ kappa3 <- 0.4
 sim_ia3 <- sim_inarma(tau3, phi3, kappa3, lgt = 1000000)
 # vector of observations for t - 3, t - 2, t - 1 for which to obtain one-
 # step-ahead forecast
-pattern <- c(1, 3, 1)
+pattern <- c(1, 3, 2)
 # get all observations following the defined pattern:
 inds_following_pattern <- numeric(0)
 for(i in 5:length(sim_ia3$X)){
