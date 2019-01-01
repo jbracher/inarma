@@ -248,7 +248,7 @@ fit_inarch <- function(vect, ...){
 # return fitted: should fitted values be returned?
 # Return: log-likelihood, or (if return_fitted) a list containing the log-likelihood
 # and the fitted values
-llik_ingarch <- function(vect, tau, phi, kappa, S1, log = TRUE, return_fitted = FALSE){
+llik_ingarch <- function(vect, tau, phi, kappa, S1, return_fitted = FALSE){
   lgt <- length(vect)
   # re-parameterize:
   nu <- phi*tau
