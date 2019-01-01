@@ -118,7 +118,7 @@ llik_inarma <- function(vect, tau, phi, kappa, log = TRUE, return_fp = FALSE){
   pars_hidden_inar <- reparam_inarma_to_hidden_inar(tau = tau, phi = phi, kappa = kappa)
   # evaluate likelihood of corresponding hidden INAR(1) model
   llik_hidden_inar(vect = vect, nu = pars_hidden_inar$nu, alpha = pars_hidden_inar$alpha,
-                  q = pars_hidden_inar$q, log = log, return_fp = return_fp)
+                   q = pars_hidden_inar$q, log = log, return_fp = return_fp)
 }
 
 # Fit INARMA(1, 1) model
@@ -131,8 +131,8 @@ llik_inarma <- function(vect, tau, phi, kappa, log = TRUE, return_fp = FALSE){
 fit_inarma <- function(vect, ...){
   nllik <- function(pars){
     -llik_inarma(vect, tau = exp(pars["log_tau"]),
-                phi = exp(pars["logit_phi"])/(1 + exp(pars["logit_phi"])),
-                kappa = exp(pars["logit_kappa"])/(1 + exp(pars["logit_kappa"])))
+                 phi = exp(pars["logit_phi"])/(1 + exp(pars["logit_phi"])),
+                 kappa = exp(pars["logit_kappa"])/(1 + exp(pars["logit_kappa"])))
   }
   # run optimization:
   opt <- optim(c(log_tau = 2, logit_phi = 0.5, logit_kappa = 0.5), nllik, ...)
@@ -156,8 +156,8 @@ fit_hidden_inar <- function(vect, ...){
   # negative log-likelihood as function of parameter vector
   nllik <- function(pars){
     -llik_hidden_inar(vect, nu = exp(pars["log_nu"]),
-                     alpha = exp(pars["logit_alpha"])/(1 + exp(pars["logit_alpha"])),
-                     q = exp(pars["logit_q"])/(1 + exp(pars["logit_q"])))
+                      alpha = exp(pars["logit_alpha"])/(1 + exp(pars["logit_alpha"])),
+                      q = exp(pars["logit_q"])/(1 + exp(pars["logit_q"])))
   }
   # run optimization
   opt <- optim(c(log_nu = 2, logit_alpha = 0.5, logit_q = 0.5), nllik, ...)
@@ -181,8 +181,8 @@ fit_inar <- function(vect, ...){
   # negative log-likelihood as function of parameter vector
   nllik <- function(pars){
     -llik_hidden_inar(vect, nu = exp(pars["log_nu"]),
-                     alpha = exp(pars["logit_alpha"])/(1 + exp(pars["logit_alpha"])),
-                     q = 1)
+                      alpha = exp(pars["logit_alpha"])/(1 + exp(pars["logit_alpha"])),
+                      q = 1)
   }
   # run optimization:
   opt <- optim(c(log_nu = 2, logit_alpha = 0.5), nllik, ...)
@@ -226,8 +226,8 @@ fit_inarch <- function(vect, ...){
   # negative log-likelihood as function of parameter vector:
   nllik <- function(pars){
     -llik_inarch(vect, nu = exp(pars["log_nu"]),
-                alpha = exp(pars["logit_alpha"])/(1 + exp(pars["logit_alpha"])),
-                lambda1 = exp(pars["log_lambda1"]))
+                 alpha = exp(pars["logit_alpha"])/(1 + exp(pars["logit_alpha"])),
+                 lambda1 = exp(pars["log_lambda1"]))
   }
   # run optmization:
   opt <- optim(c(log_nu = 2, logit_alpha = 0.5, log_lambda1 = 0.5), nllik,...)
@@ -244,18 +244,18 @@ fit_inarch <- function(vect, ...){
 #
 # Arguments:
 # vect: a vector containing the observed time series
-# tau, phi, kappa, lambda1: parameters of the INARCH(1) model
+# tau, phi, kappa, S1: parameters of the INGARCH(1) model
 # return fitted: should fitted values be returned?
 # Return: log-likelihood, or (if return_fitted) a list containing the log-likelihood
 # and the fitted values
-llik_ingarch <- function(vect, tau, phi, kappa, lambda1, log = TRUE, return_fitted = FALSE){
+llik_ingarch <- function(vect, tau, phi, kappa, S1, log = TRUE, return_fitted = FALSE){
   lgt <- length(vect)
   # re-parameterize:
   nu <- phi*tau
   alpha <- phi*kappa
   beta <- 1 - phi
   lambda <- numeric(lgt)
-  lambda[1] <- lambda1
+  lambda[1] <- (1 - beta)*S1 + nu/(1 - beta)
   for(i in 2:lgt){
     lambda[i] <- nu + alpha*vect[i - 1] + beta*lambda[i - 1]
   }
@@ -278,18 +278,18 @@ fit_ingarch <- function(vect, ...){
   # negative log-likelihood as function of parameter vector:
   nllik <- function(pars){
     -llik_ingarch(vect, tau = exp(pars["log_tau"]),
-                 phi = exp(pars["logit_phi"])/(1 + exp(pars["logit_phi"])),
-                 kappa = exp(pars["logit_kappa"])/(1 + exp(pars["logit_kappa"])),
-                 lambda1 = exp(pars["log_lambda1"]))
+                  phi = exp(pars["logit_phi"])/(1 + exp(pars["logit_phi"])),
+                  kappa = exp(pars["logit_kappa"])/(1 + exp(pars["logit_kappa"])),
+                  S1 = exp(pars["log_S1"]))
   }
-  opt <- optim(c(log_tau = 2, logit_phi = 0.5, logit_kappa = 0.5, log_lambda1 = 0.5), nllik,...)
+  opt <- optim(c(log_tau = 2, logit_phi = 0.5, logit_kappa = 0.5, log_S1 = 0.5), nllik,...)
   # structure results
   llik <- -opt$value
   par <- c(tau = exp(opt$par["log_tau"]),
            phi = exp(opt$par["logit_phi"])/(1 + exp(opt$par["logit_phi"])),
            kappa = exp(opt$par["logit_kappa"])/(1 + exp(opt$par["logit_kappa"])),
-           kappa = exp(opt$par["log_lambda1"]))
-  names(par) <- c("tau", "phi", "kappa", "lambda1")
+           kappa = exp(opt$par["log_S1"]))
+  names(par) <- c("tau", "phi", "kappa", "S1")
   return(list(par = par, llik = llik, dim = 4, opt = opt))
 }
 
