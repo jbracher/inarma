@@ -69,10 +69,10 @@ logS_gold <- cbind(time = (floor(length(data_gold$counts)/2) + 1):length(data_go
                    ingarch = osa_gold_ingarch$logS_vector)
 
 # store results:
-# write.csv(logS_gold, file = "Analyses/Results/logS_gold.csv", row.names = FALSE)
-# save(osa_gold_inar, osa_gold_inarma, osa_gold_inarch, osa_gold_ingarch,
-#      file = "Analyses/Results/osa_gold.rda")
-# load("Analyses/Results/osa_gold.rda")
+write.csv(logS_gold, file = "Analyses/Results/logS_gold.csv", row.names = FALSE)
+save(osa_gold_inar, osa_gold_inarma, osa_gold_inarch, osa_gold_ingarch,
+     file = "Analyses/Results/osa_gold.rda")
+load("Analyses/Results/osa_gold.rda")
 
 
 # Analyses for INAR(2) and CINAR(2) models are omitted here as they are based on
@@ -120,9 +120,14 @@ mean(osa_mumps_inarma$logS_vector)
 mean(osa_mumps_inarch$logS_vector)
 mean(osa_mumps_ingarch$logS_vector)
 
+logS_mumps <- cbind(time = (floor(length(data_mumps$Bavaria)/2) + 1):length(data_mumps$Bavaria),
+                   inar = osa_mumps_inar$logS_vector,
+                   inarma = osa_mumps_inarma$logS_vector,
+                   inarch = osa_mumps_inarch$logS_vector,
+                   ingarch = osa_mumps_ingarch$logS_vector)
 
 # store results:
-# write.csv(logS_mumps, file = "Analyses/Results/logS_mumps.csv", row.names = FALSE)
-# save(osa_mumps_inar, osa_mumps_inarma, osa_mumps_inarch, osa_mumps_ingarch,
-#      file = "Analyses/Results/osa_mumps.rda")
-# load("Analyses/Results/osa_mumps.rda")
+write.csv(logS_mumps, file = "Analyses/Results/logS_mumps.csv", row.names = FALSE)
+save(osa_mumps_inar, osa_mumps_inarma, osa_mumps_inarch, osa_mumps_ingarch,
+     file = "Analyses/Results/osa_mumps.rda")
+load("Analyses/Results/osa_mumps.rda")
