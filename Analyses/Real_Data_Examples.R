@@ -28,6 +28,7 @@ fit_gold_inar <- fit_inar(data_gold$counts)
 fit_gold_inarma <- fit_inarma(data_gold$counts)
 fit_gold_inarch <- fit_inarch(data_gold$counts)
 # # for comparison: fit INARCH(1) using hhh4:
+# lgt <- nrow(data_gold)
 # fit_gold_hhh4 <- hhh4(new("sts", observed = data_gold),
 #                       list(ar = list(f = ~1), subset = 2:lgt))
 fit_gold_ingarch <- fit_ingarch(data_gold$counts)
